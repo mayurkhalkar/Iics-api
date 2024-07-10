@@ -1,0 +1,76 @@
+Here's a complete script that performs all the steps to restart an IICS taskflow from a failed state using the IICS REST API and Python:
+
+```python
+import requests
+
+# Function to authenticate and get the session ID
+def get_access_token(username, password):
+    auth_url = 'https://dm-us.informaticacloud.com/ma/api/v2/user/login'
+    payload = {
+        'username': username,
+        'password': password
+    }
+    response = requests.post(auth_url, json=payload)
+    if response.status_code == 200:
+        auth_data = response.json()
+        return auth_data['userInfo']['sessionId']
+    else:
+        print('Failed to authenticate:', response.text)
+        return None
+
+# Function to get the failed taskflow run ID
+def get_failed_taskflow_run_id(access_token, taskflow_id):
+    taskflow_runs_url = f'https://dm-us.informaticacloud.com/saas/api/v2/job/{taskflow_id}/runs'
+    headers = {
+        'icSessionId': access_token
+    }
+    response = requests.get(taskflow_runs_url, headers=headers)
+    if response.status_code == 200:
+        taskflow_runs = response.json()
+        for run in taskflow_runs:
+            if run['status'] == 'FAILED':
+                return run['runId']
+    else:
+        print('Failed to get taskflow runs:', response.text)
+    return None
+
+# Function to restart the taskflow
+def restart_taskflow(access_token, taskflow_id, run_id):
+    restart_taskflow_url = f'https://dm-us.informaticacloud.com/saas/api/v2/job/{taskflow_id}/runs/{run_id}/restart'
+    headers = {
+        'icSessionId': access_token
+    }
+    response = requests.post(restart_taskflow_url, headers=headers)
+    if response.status_code == 200:
+        print('Taskflow restarted successfully.')
+    else:
+        print('Failed to restart the taskflow:', response.text)
+
+# Main function to orchestrate the process
+def main():
+    username = 'your_username'
+    password = 'your_password'
+    taskflow_id = 'your_taskflow_id'
+
+    access_token = get_access_token(username, password)
+    if not access_token:
+        return
+
+    failed_run_id = get_failed_taskflow_run_id(access_token, taskflow_id)
+    if not failed_run_id:
+        print('No failed taskflow run found.')
+        return
+
+    restart_taskflow(access_token, taskflow_id, failed_run_id)
+
+if __name__ == '__main__':
+    main()
+```
+
+Replace `your_username`, `your_password`, and `your_taskflow_id` with your actual IICS credentials and taskflow details. This script:
+
+1. Authenticates with IICS and obtains a session ID.
+2. Retrieves the failed taskflow run ID.
+3. Restarts the failed taskflow run.
+
+Make sure to handle sensitive information securely and adjust the script according to your environment.
