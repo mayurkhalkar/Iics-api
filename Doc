@@ -1,0 +1,97 @@
+To manage Data Integration tasks using the Informatica Intelligent Cloud Services (IICS) API for rerunning, restarting from a failed state, and recovery, you can use Python code to interact with the API. Below is a sample Python script demonstrating how to perform these operations.
+
+### Prerequisites
+
+1. **Install `requests` Library**:
+   ```sh
+   pip install requests
+   ```
+
+2. **API Authentication**:
+   You'll need to obtain an access token using your IICS login credentials.
+
+### Sample Python Code
+
+```python
+import requests
+import json
+
+# Define your IICS credentials and endpoints
+IICS_USERNAME = 'your_username'
+IICS_PASSWORD = 'your_password'
+IICS_BASE_URL = 'https://dm-us.informaticacloud.com/saas'
+IICS_LOGIN_URL = f'{IICS_BASE_URL}/public/core/v3/login'
+
+# Function to login and get the session ID
+def get_session_id():
+    headers = {
+        'Content-Type': 'application/json'
+    }
+    data = {
+        'username': IICS_USERNAME,
+        'password': IICS_PASSWORD
+    }
+    response = requests.post(IICS_LOGIN_URL, headers=headers, data=json.dumps(data))
+    response_data = response.json()
+    return response_data['userInfo']['sessionId']
+
+# Function to rerun a task
+def rerun_task(task_id, session_id):
+    rerun_url = f'{IICS_BASE_URL}/public/core/v3/job/{task_id}/rerun'
+    headers = {
+        'Content-Type': 'application/json',
+        'icSessionId': session_id
+    }
+    response = requests.post(rerun_url, headers=headers)
+    return response.json()
+
+# Function to restart a task from a failed state
+def restart_task_from_failed(task_id, session_id):
+    restart_url = f'{IICS_BASE_URL}/public/core/v3/job/{task_id}/restart'
+    headers = {
+        'Content-Type': 'application/json',
+        'icSessionId': session_id
+    }
+    response = requests.post(restart_url, headers=headers)
+    return response.json()
+
+# Function to get task status
+def get_task_status(task_id, session_id):
+    status_url = f'{IICS_BASE_URL}/public/core/v3/job/{task_id}/status'
+    headers = {
+        'Content-Type': 'application/json',
+        'icSessionId': session_id
+    }
+    response = requests.get(status_url, headers=headers)
+    return response.json()
+
+# Main script
+if __name__ == "__main__":
+    session_id = get_session_id()
+    task_id = 'your_task_id'  # Replace with your actual task ID
+
+    # Rerun the task
+    rerun_response = rerun_task(task_id, session_id)
+    print('Rerun Response:', rerun_response)
+
+    # Restart the task from failed state
+    restart_response = restart_task_from_failed(task_id, session_id)
+    print('Restart Response:', restart_response)
+
+    # Get the task status
+    status_response = get_task_status(task_id, session_id)
+    print('Task Status:', status_response)
+```
+
+### Explanation
+
+1. **Authentication**: The `get_session_id` function logs into the IICS and retrieves a session ID using your credentials.
+2. **Rerun Task**: The `rerun_task` function sends a POST request to rerun the specified task.
+3. **Restart from Failed State**: The `restart_task_from_failed` function sends a POST request to restart a task from a failed state.
+4. **Get Task Status**: The `get_task_status` function retrieves the status of the specified task.
+
+### Additional Resources
+- [Informatica IICS REST API Documentation](https://onlinehelp.informatica.com/iics/dev/admin/en/tt-cloud-rest-api/Informatica_Intelligent_Cloud_Services_REST_API.html)【9†source】【6†source】
+- [Informatica Developer Portal](https://developer.informatica.com/)【7†source】
+
+These references provide further details on available endpoints and parameters you can use with the IICS API.
