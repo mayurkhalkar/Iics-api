@@ -1,0 +1,38 @@
+
+import os
+
+def get_description_block(filepath):
+    with open(filepath, 'r') as file:
+        lines = file.readlines()
+    description_lines = [line for line in lines if line.strip().startswith("2 description")]
+    return description_lines[0] if description_lines else None
+
+def process_files(correct_dir, incorrect_dir, output_dir):
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    
+    correct_files = {filename: os.path.join(correct_dir, filename) for filename in os.listdir(correct_dir)}
+    incorrect_files = {filename: os.path.join(incorrect_dir, filename) for filename in os.listdir(incorrect_dir)}
+
+    for filename, incorrect_file_path in incorrect_files.items():
+        if filename in correct_files:
+            correct_file_path = correct_files[filename]
+            description_block = get_description_block(correct_file_path)
+            
+            if description_block:
+                with open(incorrect_file_path, 'r') as infile, open(os.path.join(output_dir, filename), 'w') as outfile:
+                    for line in infile:
+                        if line.strip().startswith("2 description"):
+                            outfile.write(description_block)
+                        else:
+                            outfile.write(line)
+
+# Define the directories
+correct_folder = 'folder_c'
+incorrect_folder = 'folder_i'
+output_folder = 'folder_o'
+
+# Process the files
+process_files(correct_folder, incorrect_folder, output_folder)
+
+print("Files have been processed and placed in 'folder_o'")
